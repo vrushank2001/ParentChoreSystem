@@ -200,9 +200,8 @@ public class CompetitionGUI extends JFrame{
 		tableModel.setRowCount(0); // Remove all rows from the table
 		
 		// Fetch and display chores associated with the parent account
-		List<Chore> parentChores = DatabaseOperations.getAllChoresofParent(parentAccount.getUsername());
-		List<Chore> notCompletedChores = ChoresUtils.filterNotCompleted(parentChores);
-		for (Chore chore : notCompletedChores) {
+		List<Chore> parentChoresNotAssigned = DatabaseOperations.getAllNotAssignedChoresOfParent(parentAccount.getUsername());
+		for (Chore chore : parentChoresNotAssigned) {
 			Object[] rowData = {chore.getId(), chore.getName(), chore.getCategory(), chore.getTime(),
 					chore.getPayment(), chore.isCompleted() ? "Yes" : "No",
 					chore.isPaid() ? "Yes" : "No"};

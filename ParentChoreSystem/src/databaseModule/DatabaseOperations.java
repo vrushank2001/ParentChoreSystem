@@ -355,6 +355,45 @@ public class DatabaseOperations {
 		    return chores;
 	}
     
+    public static List<Chore> getAllNotAssignedChoresOfParent(String parentUsername) {
+	    List<Chore> chores = new ArrayList<>();
+	    
+	    try(Connection connection = DatabaseConnector.getConnection();
+	    		PreparedStatement preparedStatement = connection.prepareStatement(
+	    				"SELECT * FROM Chores WHERE parentUsername = ?"
+	    				+ "AND id NOT IN (SELECT choreID FROM ChoreAssignment)")) {
+	    	
+	    	preparedStatement.setString(1, parentUsername);
+	    	
+	    	try (ResultSet resultSet = preparedStatement.executeQuery()) {
+	        	while (resultSet.next()) {
+	                Chore chore = new Chore(resultSet.getString("name"),
+	                		resultSet.getString("category"),
+	                		resultSet.getDouble("time"),
+	                		resultSet.getDouble("payment"));
+	                chore.setId(resultSet.getInt("id"));
+	                chore.setParentUsername(resultSet.getString("parentUsername"));
+	                if(resultSet.getBoolean("isPaid")) {
+						chore.markPaid();
+					}
+	                if(resultSet.getBoolean("isCompleted")) {
+	                	chore.markCompleted();
+	                }
+	                if(resultSet.getInt("rating") != -1) {
+	                	chore.setRating(resultSet.getInt("rating"));
+	                }
+	                
+	                chores.add(chore);
+	        	}
+	    	}
+	    }
+	    catch(SQLException e) {
+	    	e.printStackTrace();
+	    }
+	    
+	    return chores;
+    }
+    
     public static String getChoreCompletingChildUsername(int choreID) {
 		try(Connection connection = DatabaseConnector.getConnection();
 				PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM Chores WHERE id = ?")) {
@@ -432,7 +471,6 @@ public class DatabaseOperations {
             return false;
         }
     }
-    
     
     
     public static void markChoreAsCompleted(int choreID, String childUsername, boolean completedByDeadline) {
